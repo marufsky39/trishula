@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getOrCreateGuestUser, getUsername } from '@/lib/guest-user'
 import { Navbar } from '@/components/navbar'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -19,41 +19,51 @@ interface WasteMaterial {
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
   const supabase = createClient()
   const [user, setUser] = useState<any>(null)
   const [products, setProducts] = useState<WasteMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [username, setUsername] = useState('')
+  const [isGuest, setIsGuest] = useState(false)
 
   useEffect(() => {
     const checkUserAndFetchProducts = async () => {
       try {
-        // Check authentication
+        // Try to get authenticated user
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) {
-          router.push('/login')
-          return
+        
+        let currentUser = session?.user
+        let isGuestMode = false
+
+        // If no authenticated user, use guest user
+        if (!currentUser) {
+          currentUser = getOrCreateGuestUser() as any
+          isGuestMode = true
+          setIsGuest(true)
         }
 
-        setUser(session.user)
+        setUser(currentUser)
 
-        // Get user profile
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('username')
-          .eq('id', session.user.id)
-          .single()
+        // Only fetch profile if authenticated (not guest)
+        if (!isGuestMode && currentUser) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('username')
+            .eq('id', currentUser.id)
+            .single()
 
-        if (profile) {
-          setUsername(profile.username)
+          if (profile) {
+            setUsername(profile.username)
+          }
+        } else {
+          setUsername('Tamu')
         }
 
         // Fetch user's products
         const { data, error } = await supabase
           .from('waste_materials')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -69,7 +79,7 @@ export default function DashboardPage() {
     }
 
     checkUserAndFetchProducts()
-  }, [router, supabase])
+  }, [supabase])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return

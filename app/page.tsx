@@ -43,16 +43,16 @@ export default function Home() {
 
             <div className="hidden md:flex items-center gap-4">
               <Link
-                href="/login"
+                href="/marketplace"
                 className="px-4 py-2 text-sm font-medium text-green-600 border border-green-600 rounded-lg hover:bg-green-50 transition"
               >
-                Masuk / Daftar
+                Jelajahi Marketplace
               </Link>
               <Link
-                href="/login"
+                href="/upload"
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
               >
-                Portal Pelanggan
+                Jual Produk
               </Link>
             </div>
 
@@ -86,16 +86,16 @@ export default function Home() {
               </Link>
               <div className="px-4 py-2 space-y-2 border-t border-gray-200 mt-2 pt-2">
                 <Link
-                  href="/login"
+                  href="/marketplace"
                   className="block w-full px-4 py-2 text-center text-sm font-medium text-green-600 border border-green-600 rounded-lg hover:bg-green-50"
                 >
-                  Masuk / Daftar
+                  Jelajahi Marketplace
                 </Link>
                 <Link
-                  href="/login"
+                  href="/upload"
                   className="block w-full px-4 py-2 text-center text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
                 >
-                  Portal Pelanggan
+                  Jual Produk
                 </Link>
               </div>
             </div>
@@ -224,16 +224,24 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-20 bg-green-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-4">Bergabunglah dengan WITARA Sekarang</h2>
+          <h2 className="text-4xl font-bold mb-4">Mulai Jual atau Belanja Sekarang</h2>
           <p className="text-xl mb-8 opacity-90">
-            Jual limbah organik Anda atau belanja produk berkualitas tinggi dari distributor terpercaya
+            Tidak perlu login! Jelajahi marketplace atau mulai jual limbah organik Anda segera
           </p>
-          <Link
-            href="/login"
-            className="inline-block px-10 py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100 transition text-lg"
-          >
-            Daftar Gratis Sekarang
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/marketplace"
+              className="inline-block px-10 py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100 transition text-lg"
+            >
+              Jelajahi Marketplace
+            </Link>
+            <Link
+              href="/upload"
+              className="inline-block px-10 py-4 bg-green-700 text-white font-bold rounded-lg hover:bg-green-800 transition text-lg border-2 border-white"
+            >
+              Jual Produk
+            </Link>
+          </div>
         </div>
       </section>
 

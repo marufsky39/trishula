@@ -5,21 +5,36 @@ import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { getOrCreateGuestUser } from '@/lib/guest-user'
 
 export function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isGuest, setIsGuest] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user || null)
+        
+        if (session?.user) {
+          setUser(session.user)
+          setIsGuest(false)
+        } else {
+          // Create guest user
+          const guestUser = getOrCreateGuestUser()
+          setUser(guestUser as any)
+          setIsGuest(true)
+        }
       } catch (error) {
         console.error('Error checking user:', error)
+        // Use guest on error
+        const guestUser = getOrCreateGuestUser()
+        setUser(guestUser as any)
+        setIsGuest(true)
       } finally {
         setLoading(false)
       }
@@ -28,7 +43,10 @@ export function Navbar() {
     checkUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+      if (session?.user) {
+        setUser(session.user)
+        setIsGuest(false)
+      }
     })
 
     return () => {
@@ -63,7 +81,7 @@ export function Navbar() {
             >
               Beranda
             </Link>
-            {user && (
+            {!loading && user && (
               <>
                 <Link 
                   href="/marketplace" 
@@ -83,17 +101,9 @@ export function Navbar() {
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-4">
-            {!loading && !user ? (
-              <Link href="/login">
-                <Button 
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  Masuk
-                </Button>
-              </Link>
-            ) : !loading && user ? (
+            {!loading && !isGuest ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-700">{user.email?.split('@')[0]}</span>
+                <span className="text-sm text-gray-700">{user.email?.split('@')[0] || 'User'}</span>
                 <Button 
                   onClick={handleLogout}
                   variant="outline"
@@ -101,6 +111,17 @@ export function Navbar() {
                 >
                   Keluar
                 </Button>
+              </div>
+            ) : !loading && isGuest ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-700 bg-amber-100 px-3 py-1 rounded">Tamu</span>
+                <Link href="/login">
+                  <Button 
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Login
+                  </Button>
+                </Link>
               </div>
             ) : null}
           </div>
