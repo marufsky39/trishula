@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getOrCreateGuestUser } from '@/lib/guest-user'
 import { Navbar } from '@/components/navbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,6 @@ import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 
 export default function UploadPage() {
-  const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -19,6 +18,7 @@ export default function UploadPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isGuest, setIsGuest] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,21 +31,30 @@ export default function UploadPage() {
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) {
-          router.push('/login')
-          return
+        
+        let currentUser = session?.user
+        let isGuestMode = false
+
+        // If no authenticated user, use guest user
+        if (!currentUser) {
+          currentUser = getOrCreateGuestUser() as any
+          isGuestMode = true
+          setIsGuest(true)
         }
-        setUser(session.user)
+
+        setUser(currentUser)
       } catch (error) {
         console.error('Error:', error)
-        router.push('/login')
+        // Use guest user on error
+        setUser(getOrCreateGuestUser() as any)
+        setIsGuest(true)
       } finally {
         setLoading(false)
       }
     }
 
     checkUser()
-  }, [router, supabase])
+  }, [supabase])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -126,7 +135,10 @@ export default function UploadPage() {
       if (insertError) {
         setError(insertError.message)
       } else {
-        router.push('/dashboard')
+        // Redirect to dashboard or show success message
+        alert('Produk berhasil dipublikasikan!')
+        // Reload dashboard
+        window.location.href = '/dashboard'
       }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan')
